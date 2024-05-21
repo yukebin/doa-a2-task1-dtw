@@ -265,8 +265,39 @@ struct solution *solveProblemA(struct problem *p){
 
 struct solution *solveProblemD(struct problem *p){
     struct solution *s = newSolution(p);
-    /* Fill in: Part D */
+    int n = p->seqALength;
+    int m = p->seqBLength;
+    int windowSize = p->windowSize;
 
+    long double **dtwMatrix = (long double **) malloc(sizeof(long double *) * (n + 1));
+    assert(dtwMatrix);
+
+    /* Fill with infinity */
+    for(int i = 0; i <= n; i++){
+        dtwMatrix[i] = (long double *) malloc(sizeof(long double) * (m + 1));
+        assert(dtwMatrix[i]);
+        for(int j = 0; j <= m; j++){
+            dtwMatrix[i][j] = LDINFINITY;
+        }
+    }
+    /* Set the top-left value to 0 */
+    dtwMatrix[0][0] = 0;
+
+    /* Populate the DTW matrix */
+    for(int i = 1; i <= n; i++){
+        int start = fmax(1, i - windowSize);
+        int end = fmin(m, i + windowSize);
+        for(int j = start; j <= end; j++){
+            long double cost = fabsl(p->sequenceA[i - 1] - p->sequenceB[j - 1]);
+            dtwMatrix[i][j] = cost + fminl(dtwMatrix[i - 1][j], // Insertion
+                                    fminl(dtwMatrix[i][j - 1],  // Deletion
+                                    dtwMatrix[i - 1][j - 1])    // Match
+                                    );
+        }
+    }
+
+    s->optimalValue = dtwMatrix[n][m];
+    s->matrix = dtwMatrix;
     return s;
 }
 
