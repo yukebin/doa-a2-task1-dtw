@@ -302,9 +302,65 @@ struct solution *solveProblemD(struct problem *p){
 }
 
 struct solution *solveProblemF(struct problem *p){
-        struct solution *s = newSolution(p);
-    /* Fill in: Part F */
+    struct solution *s = newSolution(p);
+    int n = p->seqALength;
+    int m = p->seqBLength;
+    int maxPathLength = p->maximumPathLength;
 
+    /* 3D matrix to capture alignment costs across different path lengths */
+    long double ***dtwMatrix = (long double ***) malloc((n + 1) * sizeof(long double **));
+    for(int i = 0; i <= n; i++){
+        dtwMatrix[i] = (long double **) malloc((m + 1) * sizeof(long double *));
+        for(int j = 0; j <= m; j++){
+            dtwMatrix[i][j] = (long double *) malloc((maxPathLength + 1) * sizeof(long double));
+            for(int k = 0; k <= maxPathLength; k++){
+                /* Fill with infinity */
+                dtwMatrix[i][j][k] = LDINFINITY;
+            }
+        }
+    }
+
+    /* Set the top-left value to 0 for all lengths */
+    for(int k = 0; k <= maxPathLength; k++){
+        dtwMatrix[0][0][k] = 0;
+    }
+
+    /* Populate the DTW matrix */
+    for(int k = 1; k <= maxPathLength; k++){
+        for(int i = 1; i <= n; i++){
+            for(int j = 1; j <= m; j++){
+                long double cost = fabsl(p->sequenceA[i - 1] - p->sequenceB[j - 1]);
+                dtwMatrix[i][j][k] = cost + fminl(dtwMatrix[i - 1][j][k - 1], // Insertion
+                                        fminl(dtwMatrix[i][j - 1][k - 1],     // Deletion
+                                        dtwMatrix[i - 1][j - 1][k - 1])       // Match
+                                        );
+            }
+        }
+    }
+
+    // The minimum distance is the minimum value in the bottom-right corner of the matrix for all lengths
+    // Find the optimal path length
+    int optimalPathLength = 0;
+    s->optimalValue = dtwMatrix[n][m][0];
+    for(int k = 1; k <= maxPathLength; k++){
+        if(dtwMatrix[n][m][k] < s->optimalValue){
+            s->optimalValue = dtwMatrix[n][m][k];
+            optimalPathLength = k;
+        }
+    }
+
+    // Allocate a 2D array for s->matrix
+    s->matrix = (long double **) malloc((n + 1) * sizeof(long double *));
+    for(int i = 0; i <= n; i++){
+        s->matrix[i] = (long double *) malloc((m + 1) * sizeof(long double));
+    }
+
+    // Assign the slice of dtwMatrix that corresponds to the optimal path length to s->matrix
+    for(int i = 0; i <= n; i++){
+        for(int j = 0; j <= m; j++){
+            s->matrix[i][j] = dtwMatrix[i][j][optimalPathLength];
+        }
+    }
     return s;
 }
 
