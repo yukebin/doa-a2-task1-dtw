@@ -338,8 +338,7 @@ struct solution *solveProblemF(struct problem *p){
         }
     }
 
-    // The minimum distance is the minimum value in the bottom-right corner of the matrix for all lengths
-    // Find the optimal path length
+    /* The optimal path length is the minimum value in the bottom-right corner of the matrix for all lengths */
     int optimalPathLength = 0;
     s->optimalValue = dtwMatrix[n][m][0];
     for(int k = 1; k <= maxPathLength; k++){
@@ -349,13 +348,13 @@ struct solution *solveProblemF(struct problem *p){
         }
     }
 
-    // Allocate a 2D array for s->matrix
+    /* Allocate a 2D array for s->matrix */
     s->matrix = (long double **) malloc((n + 1) * sizeof(long double *));
     for(int i = 0; i <= n; i++){
         s->matrix[i] = (long double *) malloc((m + 1) * sizeof(long double));
     }
 
-    // Assign the slice of dtwMatrix that corresponds to the optimal path length to s->matrix
+    /* Assign the slice of dtwMatrix that corresponds to the optimal path length to s->matrix */
     for(int i = 0; i <= n; i++){
         for(int j = 0; j <= m; j++){
             s->matrix[i][j] = dtwMatrix[i][j][optimalPathLength];
